@@ -1,0 +1,298 @@
+import java.util.*;
+abstract class Persona {
+    String nombre;
+
+    public Persona(String nombre) {
+        this.nombre = nombre;
+    }
+}
+
+class Alumno extends Persona {
+    String carne;
+    int anioEstudio; // 1,2,3,...
+
+    public Alumno(String nombre, String carne, int anioEstudio) {
+        super(nombre);
+        this.carne = carne;
+        this.anioEstudio = anioEstudio;
+    }
+
+    @Override
+    public String toString() {
+        return "Alumno{nombre='" + nombre + "', carne='" + carne + "', año=" + anioEstudio + "}";
+    }
+}
+class Docente extends Persona {
+    String carne;
+    String dpi;
+    String especialidad;
+
+    public Docente(String nombre, String carne, String dpi, String especialidad) {
+        super(nombre);
+        this.carne = carne;
+        this.dpi = dpi;
+        this.especialidad = especialidad;
+    }
+
+    @Override
+    public String toString() {
+        return "Docente{nombre='" + nombre + "', carne='" + carne + "', dpi='" + dpi + "', esp='" + especialidad + "'}";
+    }
+}
+
+class Curso {
+    String codigo;
+    String nombre;
+    Docente docente;
+    List<Alumno> alumnos = new ArrayList<>();
+
+    public Curso(String codigo, String nombre) {
+        this.codigo = codigo;
+        this.nombre = nombre;
+    }
+
+    public void asignarDocente(Docente d) {
+        this.docente = d;
+    }
+
+    public void agregarAlumno(Alumno a) {
+        if (!alumnos.contains(a)) alumnos.add(a);
+    }
+
+    @Override
+    public String toString() {
+        String doc = (docente == null) ? "sin docente" : docente.nombre;
+        return "Curso{codigo='" + codigo + "', nombre='" + nombre + "', docente=" + doc + ", alumnos=" + alumnos.size() + "}";
+    }
+}
+class Matricula {
+    String fecha;
+    Alumno alumno;
+    Curso curso;
+
+    public Matricula(String fecha, Alumno alumno, Curso curso) {
+        this.fecha = fecha;
+        this.alumno = alumno;
+        this.curso = curso;
+    }
+
+    @Override
+    public String toString() {
+        return "Matricula{fecha='" + fecha + "', alumno=" + alumno.nombre + ", curso=" + curso.nombre + "}";
+    }
+}
+
+class Escuela {
+    String nombre;
+    List<Curso> cursos = new ArrayList<>();
+
+    public Escuela(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void agregarCurso(Curso c) {
+        cursos.add(c);
+    }
+
+    public Curso buscarCursoPorCodigo(String codigo) {
+        for (Curso c : cursos) if (c.codigo.equalsIgnoreCase(codigo)) return c;
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "Escuela{nombre='" + nombre + "', cursos=" + cursos.size() + "}";
+    }
+}
+
+public class Colegio {
+    static List<Alumno> alumnos = new ArrayList<>();
+    static List<Docente> docentes = new ArrayList<>();
+    static List<Matricula> matriculas = new ArrayList<>();
+    static Escuela escuela = new Escuela("Colegio Central");
+
+    static Scanner sc = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        int op;
+        do {
+            System.out.println("\n=== MENU COLEGIO ===");
+            System.out.println("1) Registrar alumno");
+            System.out.println("2) Registrar docente");
+            System.out.println("3) Crear curso");
+            System.out.println("4) Asignar docente a curso");
+            System.out.println("5) Matricular alumno en curso");
+            System.out.println("6) Listar cursos");
+            System.out.println("7) Listar alumnos por curso");
+            System.out.println("0) Salir");
+            System.out.print("Opción: ");
+            op = leerEntero();
+
+            switch (op) {
+                case 1 -> registrarAlumno();
+                case 2 -> registrarDocente();
+                case 3 -> crearCurso();
+                case 4 -> asignarDocenteACursoSoloUsuario();
+                case 5 -> matricularAlumnoSoloUsuario();
+                case 6 -> listarCursosSoloUsuario();
+                case 7 -> listarAlumnosPorCursoSoloUsuario();
+                case 0 -> System.out.println("Saliendo...");
+                default -> System.out.println("Opción inválida");
+            }
+        } while (op != 0);
+    }
+    static void registrarAlumno() {
+        System.out.print("Nombre: ");
+        String n = sc.nextLine();
+        System.out.print("Carné: ");
+        String carne = sc.nextLine();
+        System.out.print("Año de estudio (número): ");
+        int anio = leerEntero();
+
+        Alumno a = new Alumno(n, carne, anio);
+        alumnos.add(a);
+        System.out.println("✔ Alumno registrado: " + a);
+    }
+
+    static void registrarDocente() {
+        System.out.print("Nombre: ");
+        String n = sc.nextLine();
+        System.out.print("Carné: ");
+        String carne = sc.nextLine();
+        System.out.print("DPI: ");
+        String dpi = sc.nextLine();
+        System.out.print("Especialidad: ");
+        String esp = sc.nextLine();
+
+        Docente d = new Docente(n, carne, dpi, esp);
+        docentes.add(d);
+        System.out.println("✔ Docente registrado: " + d);
+    }
+
+    static void crearCurso() {
+        System.out.print("Código del curso: ");
+        String cod = sc.nextLine();
+        System.out.print("Nombre del curso: ");
+        String nom = sc.nextLine();
+
+        // Verifica que no exista
+        if (escuela.buscarCursoPorCodigo(cod) != null) {
+            System.out.println("✖ Ya existe un curso con ese código.");
+            return;
+        }
+
+        Curso c = new Curso(cod, nom);
+        escuela.agregarCurso(c);
+        System.out.println("✔ Curso creado: " + c);
+    }
+
+    // Opción 4
+    static void asignarDocenteACursoSoloUsuario() {
+        if (escuela.cursos.isEmpty()) {
+            System.out.println("No hay cursos creados por el usuario.");
+            return;
+        }
+        if (docentes.isEmpty()) {
+            System.out.println("No hay docentes registrados por el usuario.");
+            return;
+        }
+        System.out.print("Código del curso: ");
+        String cod = sc.nextLine();
+        Curso c = escuela.buscarCursoPorCodigo(cod);
+        if (c == null) {
+            System.out.println("Curso no encontrado.");
+            return;
+        }
+
+        System.out.println("Docentes (ingresados por el usuario):");
+        for (int i = 0; i < docentes.size(); i++) {
+            System.out.println((i + 1) + ") " + docentes.get(i));
+        }
+        System.out.print("Seleccione número: ");
+        int idx = leerEntero() - 1;
+        if (idx < 0 || idx >= docentes.size()) {
+            System.out.println("Selección inválida");
+            return;
+        }
+        c.asignarDocente(docentes.get(idx));
+        System.out.println("✔ Docente asignado: " + c);
+    }
+
+    // Opción 5
+    static void matricularAlumnoSoloUsuario() {
+        if (escuela.cursos.isEmpty()) {
+            System.out.println("No hay cursos creados por el usuario.");
+            return;
+        }
+        if (alumnos.isEmpty()) {
+            System.out.println("No hay alumnos registrados por el usuario.");
+            return;
+        }
+        System.out.print("Código del curso: ");
+        String cod = sc.nextLine();
+        Curso c = escuela.buscarCursoPorCodigo(cod);
+        if (c == null) {
+            System.out.println("Curso no encontrado.");
+            return;
+        }
+
+        System.out.println("Alumnos (ingresados por el usuario):");
+        for (int i = 0; i < alumnos.size(); i++) {
+            System.out.println((i + 1) + ") " + alumnos.get(i));
+        }
+        System.out.print("Seleccione número: ");
+        int idx = leerEntero() - 1;
+        if (idx < 0 || idx >= alumnos.size()) {
+            System.out.println("Selección inválida");
+            return;
+        }
+        Alumno a = alumnos.get(idx);
+        c.agregarAlumno(a);
+        Matricula m = new Matricula(java.time.LocalDate.now().toString(), a, c);
+        matriculas.add(m);
+        System.out.println("✔ Matriculado: " + m);
+    }
+
+    // Opción 6
+    static void listarCursosSoloUsuario() {
+        if (escuela.cursos.isEmpty()) {
+            System.out.println("No hay cursos creados por el usuario.");
+            return;
+        }
+        System.out.println("Cursos creados por el usuario:");
+        for (Curso c : escuela.cursos) {
+            System.out.println("- " + c);
+        }
+    }
+
+    // Opción 7
+    static void listarAlumnosPorCursoSoloUsuario() {
+        if (escuela.cursos.isEmpty()) {
+            System.out.println("No hay cursos creados por el usuario.");
+            return;
+        }
+        System.out.print("Código del curso: ");
+        String cod = sc.nextLine();
+        Curso c = escuela.buscarCursoPorCodigo(cod);
+        if (c == null) {
+            System.out.println("Curso no encontrado.");
+            return;
+        }
+        System.out.println("Alumnos del curso " + c.nombre + ":");
+        if (c.alumnos.isEmpty()) {
+            System.out.println("  (sin alumnos matriculados aún)");
+            return;
+        }
+        for (Alumno a : c.alumnos) {
+            System.out.println("  * " + a);
+        }
+    }
+
+    static int leerEntero() {
+        try {
+            return Integer.parseInt(sc.nextLine().trim());
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+}
